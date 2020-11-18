@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 18 November 2020 at 4:39:44 pm'!
+'From Cuis 5.0 [latest update: #4384] on 18 November 2020 at 5:08:58 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system as to be able to remember where you last filed out to and to give the option to file out to a new destination.'!
-!provides: 'FileOutRework' 1 2!
+!provides: 'FileOutRework' 1 4!
 
 
 
@@ -11,6 +11,13 @@ fileOutClassToNewDestination
 
 	selectedClassName ifNotNil: [ self selectedClass fileOutToNewDestination ]! !
 
+!Browser methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:04:57'!
+fileOutMessageCategoriesToNewDestination
+
+	selectedMessageCategory ifNotNil: [
+		self selectedClassOrMetaClass fileOutCategoryToNewDestination:
+			self selectedMessageCategoryName ]! !
+
 !Browser methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 12:04:07'!
 fileOutSystemCategoryToNewDestination
 	"Print a description of each class in the selected category onto a file 
@@ -19,13 +26,35 @@ fileOutSystemCategoryToNewDestination
 	selectedSystemCategory
 		ifNotNil: [ systemOrganizer fileOutCategoryToNewDestination: selectedSystemCategory ]! !
 
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:02:48'!
+fileOutCategory: catName
+	"FileOut the named category"
+
+	^self fileOutCategory: catName askUserForDestination: false.! !
+
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:08:32'!
+fileOutCategory: catName askUserForDestination: aBoolean
+	"FileOut the named category to an user defined destination"
+
+	(Utilities requestWorkDirectoryFileEntryfor: (self name , '-' , catName) askUser: aBoolean)  
+			writeStreamDo: [ :fileStream |
+						fileStream timeStamp.
+						self fileOutCategory: catName on: fileStream moveSource: false toFile: 0.
+						Utilities updateWorkDirectoryFromFileStream: fileStream]! !
+
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:02:48'!
+fileOutCategoryToNewDestination: catName
+	"FileOut the named category to an user defined destination"
+
+	^self fileOutCategory: catName askUserForDestination: true. ! !
+
 !Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:32:52'!
 fileOut
 	"File a description of the receiver onto a new file whose base name is the name of the receiver."
 
 	^self fileOutAndAskUserForNewDestination: false.! !
 
-!Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:32:23'!
+!Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:58:22'!
 fileOutAndAskUserForNewDestination: aBoolean
 	"File a description of the receiver onto a new file whose base name is the name of the receiver."
 
@@ -35,7 +64,8 @@ fileOutAndAskUserForNewDestination: aBoolean
 			self sharedPools size > 0 ifTrue: [
 				self shouldFileOutPools
 					ifTrue: [ self fileOutSharedPoolsOn: stream ]].
-			self fileOutOn: stream moveSource: false toFile: 0 ]! !
+			self fileOutOn: stream moveSource: false toFile: 0.
+			Utilities updateWorkDirectoryFromFileStream: stream ]! !
 
 !Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:33:47'!
 fileOutToNewDestination
@@ -77,10 +107,10 @@ informSucessfullAction: anActionName
 	(PopUpMenu 		labels:		'Ok') 	startUpWithCaption: anActionName,' was succesfull'.
 	^anActionName, ' was succesfull.'.! !
 
-!Utilities class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:28:02'!
+!Utilities class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:53:29'!
 requestWorkDirectoryFileEntryfor: anEntity askUser: aBoolean
 	| fileEntry newFullFilePath |
-	fileEntry := self currentWorkDirectory // (anEntity name asFileName , '.st').
+	fileEntry := self currentWorkDirectory // (anEntity asString asFileName , '.st').
 	aBoolean ifTrue: [newFullFilePath _ self request: 'Enter a new file name' initialAnswer: fileEntry asString.
 				fileEntry := newFullFilePath asFileEntry.].
 	^fileEntry! !
@@ -244,6 +274,93 @@ classListMenuOptions
 				#label 			-> 		'more...'.
 				#selector 		-> 		#offerClassListMenu2.
 				#icon 			-> 		#listAddIcon
+			} asDictionary.
+		}`.
+	! !
+
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:06:05'!
+messageCategoryMenuOptions
+
+	^`{
+			{
+				#itemGroup 		-> 		10.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'fileOut (o)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessageCategories.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		10.
+				#itemOrder 		-> 		15.
+				#label 			-> 		'fileOut to new destination'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessageCategoriesToNewDestination.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'reorganize (r)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#editMessageCategories.
+				#icon 			-> 		#sendReceiveIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'alphabetize (a)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#alphabetizeMessageCategories.
+				#icon 			-> 		#fontXGenericIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		30.
+				#label 			-> 		'remove empty categories (e)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeEmptyCategories.
+				#icon 			-> 		#listRemoveIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		40.
+				#label 			-> 		'categorize all uncategorized (c)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#categorizeAllUncategorizedMethods.
+				#icon 			-> 		#packageIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		50.
+				#label 			-> 		'new category... (n)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#addCategory.
+				#icon 			-> 		#newIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		30.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'rename... (R)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#renameCategory.
+				#icon 			-> 		#saveAsIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		30.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'remove (x)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeMessageCategory.
+				#icon 			-> 		#deleteIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		40.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'run tests (t)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#runMessageCategoryTests.
+				#icon 			-> 		#weatherFewCloudsIcon
 			} asDictionary.
 		}`.
 	! !

@@ -1,8 +1,15 @@
-'From Cuis 5.0 [latest update: #4384] on 18 November 2020 at 5:08:58 pm'!
+'From Cuis 5.0 [latest update: #4384] on 18 November 2020 at 5:48:43 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system as to be able to remember where you last filed out to and to give the option to file out to a new destination.'!
-!provides: 'FileOutRework' 1 4!
+!provides: 'FileOutRework' 1 5!
 
 
+
+!CodeProvider methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:30:28'!
+fileOutMessageToNewDestination
+	"Put a description of the selected message on a file"
+
+	self selectedMessageName ifNotNil: [
+		self selectedClassOrMetaClass fileOutMethodToNewDestination: self selectedMessageName]! !
 
 !Browser methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:35:41'!
 fileOutClassToNewDestination
@@ -47,6 +54,33 @@ fileOutCategoryToNewDestination: catName
 	"FileOut the named category to an user defined destination"
 
 	^self fileOutCategory: catName askUserForDestination: true. ! !
+
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:23:04'!
+fileOutMethod: selector
+	"Write source code of a single method on a file.  Make up a name for the file."
+
+	^self fileOutMethod: selector askUserForDestination: false! !
+
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:22:25'!
+fileOutMethod: selector askUserForDestination: aBoolean
+	"Write source code of a single method on a file.  Make up a name for the file."
+
+	| nameBody |
+	(selector == #Comment) ifTrue: [^ self inform: 'Sorry, cannot file out class comment in isolation.'].
+	(self includesSelector: selector) ifFalse: [^ self error: 'Selector ', selector asString, ' not found'].
+	nameBody _ self name , '-' , (selector copyReplaceAll: ':' with: '').
+	(Utilities requestWorkDirectoryFileEntryfor: nameBody askUser: aBoolean) 
+			 writeStreamDo: [ :fileStream |
+						fileStream timeStamp.
+						self printMethodChunk: selector withPreamble: true
+						on: fileStream moveSource: false toFile: 0.
+						 Utilities updateWorkDirectoryFromFileStream: fileStream]! !
+
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:24:36'!
+fileOutMethodToNewDestination: selector
+	"Write source code of a single method on a file.  Make up a name for the file and ask the user for a destination."
+
+	^self fileOutMethod: selector askUserForDestination: true.! !
 
 !Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:32:52'!
 fileOut
@@ -120,7 +154,7 @@ updateWorkDirectoryFromFileStream: aFileStream
 	"I'm not sure i like this implementation, but i'm also not sure if there's a better cross-platform way to update the directory with the parent of the current fileStream target"
 	CurrentWorkDirectory := DirectoryEntry withPathName: aFileStream fileEntry parent asString! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:38:08'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:41:52'!
 classListMenuOptions
 
 	^ `{
@@ -156,7 +190,7 @@ classListMenuOptions
 			{
 				#itemGroup 		-> 		20.
 				#itemOrder 		-> 		15.
-				#label 			-> 		'fileOut to new directory'.
+				#label 			-> 		'fileOutTo'.
 				#object 			-> 		#model.
 				#selector 		-> 		#fileOutClassToNewDestination.
 				#icon 			-> 		#fileOutIcon
@@ -278,7 +312,7 @@ classListMenuOptions
 		}`.
 	! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:06:05'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:41:58'!
 messageCategoryMenuOptions
 
 	^`{
@@ -293,7 +327,7 @@ messageCategoryMenuOptions
 			{
 				#itemGroup 		-> 		10.
 				#itemOrder 		-> 		15.
-				#label 			-> 		'fileOut to new destination'.
+				#label 			-> 		'fileOutTo'.
 				#object 			-> 		#model.
 				#selector 		-> 		#fileOutMessageCategoriesToNewDestination.
 				#icon 			-> 		#fileOutIcon
@@ -365,7 +399,175 @@ messageCategoryMenuOptions
 		}`.
 	! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 12:06:27'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:43:52'!
+messageListMenuOptions
+	
+	^`{
+			{
+				#itemGroup 		-> 		10.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'what to show...'.
+				#selector 		-> 		#offerWhatToShowMenu.
+				#icon 			-> 		#preferencesIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		10.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'toggle break on entry'.
+				#object 			-> 		#model.
+				#selector 		-> 		#toggleBreakOnEntry.
+				#icon 			-> 		#debugIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'browse full (b)'.
+				#selector 		-> 		#browseMethodFull.
+				#icon 			-> 		#editFindReplaceIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'browse hierarchy (h)'.
+				#selector 		-> 		#browseHierarchy.
+				#icon 			-> 		#goTopIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		30.
+				#label 			-> 		'browse method (O)'.
+				#selector 		-> 		#openSingleMessageBrowser.
+				#icon 			-> 		#scriptIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		20.
+				#itemOrder 		-> 		40.
+				#label 			-> 		'browse protocol (p)'.
+				#selector 		-> 		#browseFullProtocol.
+				#icon 			-> 		#spreadsheetIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		30.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'fileOut'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessage.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		30.
+				#itemOrder 		-> 		15.
+				#label 			-> 		'fileOutTo'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessageToNewDestination.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		30.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'inspect CompiledMethod'.
+				#object 			-> 		#model.
+				#selector 		-> 		#inspectCompiledMethod.
+				#icon 			-> 		#exploreIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		40.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'senders of... (n)'.
+				#selector 		-> 		#browseSendersOfMessages.
+				#icon 			-> 		#mailForwardIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		40.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'implementors of... (m)'.
+				#selector 		-> 		#browseMessages.
+				#icon 			-> 		#developmentIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		40.
+				#itemOrder 		-> 		30.
+				#label 			-> 		'inheritance (i)'.
+				#selector 		-> 		#methodHierarchy.
+				#icon 			-> 		#goDownIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		40.
+				#itemOrder 		-> 		40.
+				#label 			-> 		'versions (v)'.
+				#selector 		-> 		#browseVersions.
+				#icon 			-> 		#clockIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		50.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'inst var refs...'.
+				#selector 		-> 		#browseInstVarRefs.
+				#icon 			-> 		#instanceIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		50.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'inst var defs...'.
+				#selector 		-> 		#browseInstVarDefs.
+				#icon 			-> 		#instanceIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		50.
+				#itemOrder 		-> 		30.
+				#label 			-> 		'class var refs...'.
+				#selector 		-> 		#browseClassVarRefs.
+				#icon 			-> 		#classIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		50.
+				#itemOrder 		-> 		40.
+				#label 			-> 		'class variables'.
+				#selector 		-> 		#browseClassVariables.
+				#icon 			-> 		#classIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		50.
+				#itemOrder 		-> 		50.
+				#label 			-> 		'class refs (N)'.
+				#selector 		-> 		#browseClassRefs.
+				#icon 			-> 		#classIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		60.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'remove method (x)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeMessage.
+				#icon 			-> 		#deleteIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		60.
+				#itemOrder 		-> 		20.
+				#label 			-> 		'run test (t)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#runMethodTest.
+				#icon 			-> 		#weatherFewCloudsIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		60.
+				#itemOrder 		-> 		30.
+				#label 			-> 		'debug test (r)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#debugMethodTest.
+				#icon 			-> 		#weatherFewCloudsIcon
+			} asDictionary.
+			{
+				#itemGroup 		-> 		70.
+				#itemOrder 		-> 		10.
+				#label 			-> 		'more...'.
+				#selector 		-> 		#openMessageListMenu2.
+				#icon 			-> 		#listAddIcon
+			} asDictionary.
+		}`.
+	! !
+
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:42:08'!
 systemCatSingletonMenuOptions
 
 	^`{
@@ -401,7 +603,7 @@ systemCatSingletonMenuOptions
 			{
 				#itemGroup 		-> 		30.
 				#itemOrder 		-> 		15.
-				#label 			-> 		'fileOut to new dir'.
+				#label 			-> 		'fileOutTo'.
 				#object 			-> 		#model.
 				#selector 		-> 		#fileOutSystemCategoryToNewDestination.
 				#icon 			-> 		#fileOutIcon
@@ -433,7 +635,7 @@ systemCatSingletonMenuOptions
 		}`.
 	! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 12:06:57'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:42:17'!
 systemCategoryMenuOptions
 
 	^`{
@@ -477,7 +679,7 @@ systemCategoryMenuOptions
 			{
 				#itemGroup 		-> 		30.
 				#itemOrder 		-> 		15.
-				#label 			-> 		'fileOut to new dir'.
+				#label 			-> 		'fileOutTo'.
 				#object 			-> 		#model.
 				#selector 		-> 		#fileOutSystemCategoryToNewDestination.
 				#icon 			-> 		#fileOutIcon

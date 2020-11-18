@@ -1,2 +1,2 @@
 # FileOutRework
-This Smalltalk package seeks to improve the functionality of native fileOut implementations in order to follow the behaviours defined in the FileOutUtility class (https://github.com/Mauro-Rizzi/FileOutUtility)
+This Smalltalk package seeks to improve the functionality of native fileOut implementations so the system remembers the destination of the last fileOut and also allow the user to select a new one easily.

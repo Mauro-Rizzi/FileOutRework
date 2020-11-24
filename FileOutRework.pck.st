@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 18 November 2020 at 5:48:43 pm'!
+'From Cuis 5.0 [latest update: #4384] on 24 November 2020 at 10:40:51 am'!
 'Description This package seeks to improve the FileOut behaviour of the system as to be able to remember where you last filed out to and to give the option to file out to a new destination.'!
-!provides: 'FileOutRework' 1 5!
+!provides: 'FileOutRework' 1 6!
 
 
 
@@ -783,3 +783,154 @@ systemCategoryMenuOptions
 			} asDictionary.
 		}`.
 	! !
+
+!DenotativeObjectBrowserWindow methodsFor: '*FileOutRework' stamp: 'MR 11/24/2020 10:40:05'!
+messageListMenu
+	"Answer the message-list menu"
+	"Changed by emm to include menu-item for breakpoints"
+
+	| aMenu |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addTitle: 'Message List'.
+	aMenu
+		addItemsFromDictionaries: `{
+			{
+				#label 			-> 		'fileOut (o)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessage.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#label 			-> 		'fileOutTo'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessageToNewDestination.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'senders of... (n)'.
+				#selector 		-> 		#browseSendersOfSelectedSelector.
+				#icon 			-> 		#mailForwardIcon
+			} asDictionary.
+			{
+				#label 			-> 		'implementors of... (m)'.
+				#selector 		-> 		#browseImplementorsOfSelectedSelector.
+				#icon 			-> 		#developmentIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'rename (R)'.
+				#selector 		-> 		#renameSelector.
+				#icon 			-> 		#saveAsIcon
+			} asDictionary.
+			{
+				#label 			-> 		'remove (x)'.
+				#selector 		-> 		#removeMessage.
+				#icon 			-> 		#deleteIcon
+			} asDictionary.
+			{				 
+				#label 			-> 		'versions (v)'.
+				#selector 		-> 		#browseVersions.
+				#icon 			-> 		#clockIcon
+			} asDictionary.
+			nil.		
+			{
+				#label 			-> 		'change category...'.
+				#object 			-> 		#model.
+				#selector 		-> 		#changeCategory.
+				#icon 			-> 		#editFindReplaceIcon
+			} asDictionary.
+			{
+				#label 			-> 		'show category'.
+				#object 			-> 		#model.
+				#selector 		-> 		#showHomeCategory.
+				#icon 			-> 		#helpIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'send (t)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#runMethodTest.
+				#icon 			-> 		#weatherFewCloudsIcon
+			} asDictionary.
+			{
+				#label 			-> 		'send and inspect (e)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#sendAndInspect.
+				#icon 			-> 		#inspectIcon
+			} asDictionary.
+			{
+				#label 			-> 		'debug (r)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#debugMethodTest.
+				#icon 			-> 		#debugIcon
+			} asDictionary.
+			{
+				#label 			-> 		'debug and inspect (q)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#debugAndInspect.
+				#icon 			-> 		#debugIcon
+			} asDictionary.
+		}`.
+	^ aMenu! !
+
+!DenotativeObjectBrowserWindow methodsFor: '*FileOutRework' stamp: 'MR 11/24/2020 10:35:48'!
+systemCategoryMenu
+
+	| aMenu |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addTitle: 'Categories'.
+	aMenu
+		addItemsFromDictionaries: `{
+			{
+				#label 			-> 		'find object... (f)'.
+				#selector 		-> 		#findClass.
+				#icon 			-> 		#findIcon
+			} asDictionary.
+			{
+				#label 			-> 		'recent objects... (r)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#recent.
+				#icon 			-> 		#clockIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'fileOut'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutSystemCategory.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#label 			-> 		'fileOutTo'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutSystemCategoryToNewDestination.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#label 			-> 		'fileIn'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileInSystemCategory.
+				#icon 			-> 		#scriptIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'rename...'.
+				#object 			-> 		#model.
+				#selector 		-> 		#renameSystemCategory.
+				#icon 			-> 		#saveAsIcon
+			} asDictionary.
+			{
+				#label 			-> 		'remove (x)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeSystemCategory.
+				#icon 			-> 		#deleteIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'Run tests (t)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#runSystemCategoryTests.
+				#icon 			-> 		#weatherFewCloudsIcon
+			} asDictionary.
+		}`.
+	^aMenu! !

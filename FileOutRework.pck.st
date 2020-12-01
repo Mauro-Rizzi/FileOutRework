@@ -1,8 +1,15 @@
-'From Cuis 5.0 [latest update: #4384] on 24 November 2020 at 10:40:51 am'!
-'Description This package seeks to improve the FileOut behaviour of the system as to be able to remember where you last filed out to and to give the option to file out to a new destination.'!
-!provides: 'FileOutRework' 1 6!
+'From Cuis 5.0 [latest update: #4384] on 1 December 2020 at 8:00:40 pm'!
+'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
+!provides: 'FileOutRework' 1 7!
 
 
+
+!CodeProvider methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:47:56'!
+fileOutMessageToCurrentWorkDirectory
+	"Put a description of the selected message on a file"
+
+	self selectedMessageName ifNotNil: [
+		self selectedClassOrMetaClass fileOutMethodToCurrentWorkDirectory: self selectedMessageName]! !
 
 !CodeProvider methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:30:28'!
 fileOutMessageToNewDestination
@@ -11,6 +18,13 @@ fileOutMessageToNewDestination
 	self selectedMessageName ifNotNil: [
 		self selectedClassOrMetaClass fileOutMethodToNewDestination: self selectedMessageName]! !
 
+!Browser methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:49:16'!
+fileOutClassToCurrentWorkDirectory
+	"Print a description of the selected class onto a file whose name is the 
+	category name followed by .st inside the current work directory."
+
+	selectedClassName ifNotNil: [ self selectedClass fileOutToCurrentWorkDirectory ]! !
+
 !Browser methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:35:41'!
 fileOutClassToNewDestination
 	"Print a description of the selected class onto a file whose name is the 
@@ -18,12 +32,27 @@ fileOutClassToNewDestination
 
 	selectedClassName ifNotNil: [ self selectedClass fileOutToNewDestination ]! !
 
+!Browser methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:49:45'!
+fileOutMessageCategoriesToCurrentWorkDirectory
+
+	selectedMessageCategory ifNotNil: [
+		self selectedClassOrMetaClass fileOutCategoryToCurrentWorkDirectory:
+			self selectedMessageCategoryName ]! !
+
 !Browser methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:04:57'!
 fileOutMessageCategoriesToNewDestination
 
 	selectedMessageCategory ifNotNil: [
 		self selectedClassOrMetaClass fileOutCategoryToNewDestination:
 			self selectedMessageCategoryName ]! !
+
+!Browser methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:50:39'!
+fileOutSystemCategoryToCurrentWorkDirectory
+	"Print a description of each class in the selected category onto a file 
+	inside the current work directory 	whose name is the category name followed by .st."
+
+	selectedSystemCategory
+		ifNotNil: [ systemOrganizer fileOutCategoryToCurrentWorkDirectory: selectedSystemCategory ]! !
 
 !Browser methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 12:04:07'!
 fileOutSystemCategoryToNewDestination
@@ -33,13 +62,7 @@ fileOutSystemCategoryToNewDestination
 	selectedSystemCategory
 		ifNotNil: [ systemOrganizer fileOutCategoryToNewDestination: selectedSystemCategory ]! !
 
-!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:02:48'!
-fileOutCategory: catName
-	"FileOut the named category"
-
-	^self fileOutCategory: catName askUserForDestination: false.! !
-
-!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:08:32'!
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:57:59'!
 fileOutCategory: catName askUserForDestination: aBoolean
 	"FileOut the named category to an user defined destination"
 
@@ -47,7 +70,15 @@ fileOutCategory: catName askUserForDestination: aBoolean
 			writeStreamDo: [ :fileStream |
 						fileStream timeStamp.
 						self fileOutCategory: catName on: fileStream moveSource: false toFile: 0.
-						Utilities updateWorkDirectoryFromFileStream: fileStream]! !
+						Utilities updateWorkDirectoryFromFileStream: fileStream].
+					
+	^Utilities informSucessfullAction: 'FileOut'! !
+
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:45:43'!
+fileOutCategoryToCurrentWorkDirectory: catName
+	"FileOut the named category to the current work directory"
+
+	^self fileOutCategory: catName askUserForDestination: false. ! !
 
 !ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:02:48'!
 fileOutCategoryToNewDestination: catName
@@ -55,13 +86,7 @@ fileOutCategoryToNewDestination: catName
 
 	^self fileOutCategory: catName askUserForDestination: true. ! !
 
-!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:23:04'!
-fileOutMethod: selector
-	"Write source code of a single method on a file.  Make up a name for the file."
-
-	^self fileOutMethod: selector askUserForDestination: false! !
-
-!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:22:25'!
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:58:10'!
 fileOutMethod: selector askUserForDestination: aBoolean
 	"Write source code of a single method on a file.  Make up a name for the file."
 
@@ -74,7 +99,15 @@ fileOutMethod: selector askUserForDestination: aBoolean
 						fileStream timeStamp.
 						self printMethodChunk: selector withPreamble: true
 						on: fileStream moveSource: false toFile: 0.
-						 Utilities updateWorkDirectoryFromFileStream: fileStream]! !
+						 Utilities updateWorkDirectoryFromFileStream: fileStream].
+					
+	^Utilities informSucessfullAction: 'FileOut'.! !
+
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:46:45'!
+fileOutMethodToCurrentWorkDirectory: selector
+	"Write source code of a single method on a file in the current work directory.  Make up a name for the file."
+
+	^self fileOutMethod: selector askUserForDestination: false.! !
 
 !ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:24:36'!
 fileOutMethodToNewDestination: selector
@@ -82,13 +115,7 @@ fileOutMethodToNewDestination: selector
 
 	^self fileOutMethod: selector askUserForDestination: true.! !
 
-!Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:32:52'!
-fileOut
-	"File a description of the receiver onto a new file whose base name is the name of the receiver."
-
-	^self fileOutAndAskUserForNewDestination: false.! !
-
-!Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:58:22'!
+!Class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:57:13'!
 fileOutAndAskUserForNewDestination: aBoolean
 	"File a description of the receiver onto a new file whose base name is the name of the receiver."
 
@@ -99,19 +126,21 @@ fileOutAndAskUserForNewDestination: aBoolean
 				self shouldFileOutPools
 					ifTrue: [ self fileOutSharedPoolsOn: stream ]].
 			self fileOutOn: stream moveSource: false toFile: 0.
-			Utilities updateWorkDirectoryFromFileStream: stream ]! !
+			Utilities updateWorkDirectoryFromFileStream: stream ].
+		
+	^Utilities informSucessfullAction: 'FileOut'! !
+
+!Class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:40:19'!
+fileOutToCurrentWorkDirectory
+	"File a description of the receiver onto a new file whose base name is the name of the receiver to the current work directory."
+
+	^self fileOutAndAskUserForNewDestination: false.! !
 
 !Class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:33:47'!
 fileOutToNewDestination
 	"File a description of the receiver onto a new file whose base name is the name of the receiver while asking the user for a new destination."
 
 	^self fileOutAndAskUserForNewDestination: true.! !
-
-!SystemOrganizer methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 11:57:43'!
-fileOutCategory: category
-	"FileOut all the classes in the named system category."
-
-	^self fileOutCategory: category askUserForDestination: false.! !
 
 !SystemOrganizer methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 11:57:43'!
 fileOutCategory: category askUserForDestination: aBoolean
@@ -122,6 +151,12 @@ fileOutCategory: category askUserForDestination: aBoolean
 		Utilities updateWorkDirectoryFromFileStream: fileStream ].
 	
 	^Utilities informSucessfullAction: 'FileOut'! !
+
+!SystemOrganizer methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:48:22'!
+fileOutCategoryToCurrentWorkDirectory: category
+	"FileOut all the classes in the named system category to the current work directory."
+
+	^self fileOutCategory: category askUserForDestination: false.! !
 
 !SystemOrganizer methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 11:58:35'!
 fileOutCategoryToNewDestination: category
@@ -141,11 +176,13 @@ informSucessfullAction: anActionName
 	(PopUpMenu 		labels:		'Ok') 	startUpWithCaption: anActionName,' was succesfull'.
 	^anActionName, ' was succesfull.'.! !
 
-!Utilities class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 16:53:29'!
+!Utilities class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:52:27'!
 requestWorkDirectoryFileEntryfor: anEntity askUser: aBoolean
 	| fileEntry newFullFilePath |
 	fileEntry := self currentWorkDirectory // (anEntity asString asFileName , '.st').
-	aBoolean ifTrue: [newFullFilePath _ self request: 'Enter a new file name' initialAnswer: fileEntry asString.
+	aBoolean ifTrue: [newFullFilePath _ self request: 'Enter a new file name' 
+									initialAnswer: fileEntry asString
+									orCancel: [^self error: 'Please close this to abort operation'].
 				fileEntry := newFullFilePath asFileEntry.].
 	^fileEntry! !
 
@@ -154,7 +191,7 @@ updateWorkDirectoryFromFileStream: aFileStream
 	"I'm not sure i like this implementation, but i'm also not sure if there's a better cross-platform way to update the directory with the parent of the current fileStream target"
 	CurrentWorkDirectory := DirectoryEntry withPathName: aFileStream fileEntry parent asString! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:41:52'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:53:22'!
 classListMenuOptions
 
 	^ `{
@@ -184,7 +221,7 @@ classListMenuOptions
 				#itemOrder 		-> 		10.
 				#label 			-> 		'fileOut'.
 				#object 			-> 		#model.
-				#selector 		-> 		#fileOutClass.
+				#selector 		-> 		#fileOutClassToCurrentWorkDirectory.
 				#icon 			-> 		#fileOutIcon
 			} asDictionary.
 			{
@@ -312,7 +349,7 @@ classListMenuOptions
 		}`.
 	! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:41:58'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:53:30'!
 messageCategoryMenuOptions
 
 	^`{
@@ -321,7 +358,7 @@ messageCategoryMenuOptions
 				#itemOrder 		-> 		10.
 				#label 			-> 		'fileOut (o)'.
 				#object 			-> 		#model.
-				#selector 		-> 		#fileOutMessageCategories.
+				#selector 		-> 		#fileOutMessageCategoriesToCurrentWorkDirectory.
 				#icon 			-> 		#fileOutIcon
 			} asDictionary.
 			{
@@ -399,7 +436,7 @@ messageCategoryMenuOptions
 		}`.
 	! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:43:52'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:53:43'!
 messageListMenuOptions
 	
 	^`{
@@ -451,7 +488,7 @@ messageListMenuOptions
 				#itemOrder 		-> 		10.
 				#label 			-> 		'fileOut'.
 				#object 			-> 		#model.
-				#selector 		-> 		#fileOutMessage.
+				#selector 		-> 		#fileOutMessageToCurrentWorkDirectory.
 				#icon 			-> 		#fileOutIcon
 			} asDictionary.
 			{
@@ -567,7 +604,7 @@ messageListMenuOptions
 		}`.
 	! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:42:08'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:53:57'!
 systemCatSingletonMenuOptions
 
 	^`{
@@ -597,7 +634,7 @@ systemCatSingletonMenuOptions
 				#itemOrder 		-> 		10.
 				#label 			-> 		'fileOut (o)'.
 				#object 			-> 		#model.
-				#selector 		-> 		#fileOutSystemCategory.
+				#selector 		-> 		#fileOutSystemCategoryToCurrentWorkDirectory.
 				#icon 			-> 		#fileOutIcon
 			} asDictionary.
 			{
@@ -635,7 +672,7 @@ systemCatSingletonMenuOptions
 		}`.
 	! !
 
-!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 17:42:17'!
+!BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:54:07'!
 systemCategoryMenuOptions
 
 	^`{
@@ -673,7 +710,7 @@ systemCategoryMenuOptions
 				#itemOrder 		-> 		10.
 				#label 			-> 		'fileOut (o)'.
 				#object 			-> 		#model.
-				#selector 		-> 		#fileOutSystemCategory.
+				#selector 		-> 		#fileOutSystemCategoryToCurrentWorkDirectory.
 				#icon 			-> 		#fileOutIcon
 			} asDictionary.
 			{
@@ -784,7 +821,7 @@ systemCategoryMenuOptions
 		}`.
 	! !
 
-!DenotativeObjectBrowserWindow methodsFor: '*FileOutRework' stamp: 'MR 11/24/2020 10:40:05'!
+!DenotativeObjectBrowserWindow methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:50:48'!
 messageListMenu
 	"Answer the message-list menu"
 	"Changed by emm to include menu-item for breakpoints"
@@ -797,7 +834,7 @@ messageListMenu
 			{
 				#label 			-> 		'fileOut (o)'.
 				#object 			-> 		#model.
-				#selector 		-> 		#fileOutMessage.
+				#selector 		-> 		#fileOutMessageToCurrentWorkDirectory.
 				#icon 			-> 		#fileOutIcon
 			} asDictionary.
 			{
@@ -874,7 +911,7 @@ messageListMenu
 		}`.
 	^ aMenu! !
 
-!DenotativeObjectBrowserWindow methodsFor: '*FileOutRework' stamp: 'MR 11/24/2020 10:35:48'!
+!DenotativeObjectBrowserWindow methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:50:58'!
 systemCategoryMenu
 
 	| aMenu |
@@ -897,7 +934,7 @@ systemCategoryMenu
 			{
 				#label 			-> 		'fileOut'.
 				#object 			-> 		#model.
-				#selector 		-> 		#fileOutSystemCategory.
+				#selector 		-> 		#fileOutSystemCategoryToCurrentWorkDirectory.
 				#icon 			-> 		#fileOutIcon
 			} asDictionary.
 			{

@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 1 December 2020 at 8:00:40 pm'!
+'From Cuis 5.0 [latest update: #4384] on 1 December 2020 at 8:20:54 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 7!
+!provides: 'FileOutRework' 1 8!
 
 
 
@@ -62,11 +62,11 @@ fileOutSystemCategoryToNewDestination
 	selectedSystemCategory
 		ifNotNil: [ systemOrganizer fileOutCategoryToNewDestination: selectedSystemCategory ]! !
 
-!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:57:59'!
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:18:35'!
 fileOutCategory: catName askUserForDestination: aBoolean
 	"FileOut the named category to an user defined destination"
 
-	(Utilities requestWorkDirectoryFileEntryfor: (self name , '-' , catName) askUser: aBoolean)  
+	(Utilities requestWorkDirectoryFileEntryfor: (self name , '-' , catName,'.st') askUser: aBoolean)  
 			writeStreamDo: [ :fileStream |
 						fileStream timeStamp.
 						self fileOutCategory: catName on: fileStream moveSource: false toFile: 0.
@@ -86,7 +86,7 @@ fileOutCategoryToNewDestination: catName
 
 	^self fileOutCategory: catName askUserForDestination: true. ! !
 
-!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:58:10'!
+!ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:19:26'!
 fileOutMethod: selector askUserForDestination: aBoolean
 	"Write source code of a single method on a file.  Make up a name for the file."
 
@@ -94,7 +94,7 @@ fileOutMethod: selector askUserForDestination: aBoolean
 	(selector == #Comment) ifTrue: [^ self inform: 'Sorry, cannot file out class comment in isolation.'].
 	(self includesSelector: selector) ifFalse: [^ self error: 'Selector ', selector asString, ' not found'].
 	nameBody _ self name , '-' , (selector copyReplaceAll: ':' with: '').
-	(Utilities requestWorkDirectoryFileEntryfor: nameBody askUser: aBoolean) 
+	(Utilities requestWorkDirectoryFileEntryfor: (nameBody,'.st') askUser: aBoolean) 
 			 writeStreamDo: [ :fileStream |
 						fileStream timeStamp.
 						self printMethodChunk: selector withPreamble: true
@@ -115,11 +115,11 @@ fileOutMethodToNewDestination: selector
 
 	^self fileOutMethod: selector askUserForDestination: true.! !
 
-!Class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:57:13'!
+!Class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:17:48'!
 fileOutAndAskUserForNewDestination: aBoolean
 	"File a description of the receiver onto a new file whose base name is the name of the receiver."
 
-	(Utilities requestWorkDirectoryFileEntryfor: self askUser: aBoolean) writeStreamDo: 
+	(Utilities requestWorkDirectoryFileEntryfor: (self name, '.st') askUser: aBoolean) writeStreamDo: 
 			[ :stream |
 			stream timeStamp.
 			self sharedPools size > 0 ifTrue: [
@@ -142,11 +142,11 @@ fileOutToNewDestination
 
 	^self fileOutAndAskUserForNewDestination: true.! !
 
-!SystemOrganizer methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 11:57:43'!
+!SystemOrganizer methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:14:28'!
 fileOutCategory: category askUserForDestination: aBoolean
 	"FileOut all the classes in the named system category to an user defined location."
 
-	(Utilities requestWorkDirectoryFileEntryfor: category askUser: aBoolean) writeStreamDo: [ :fileStream |
+	(Utilities requestWorkDirectoryFileEntryfor: (category asString, '.st') askUser: aBoolean) writeStreamDo: [ :fileStream |
 		self fileOutCategory: category on: fileStream initializing: true.
 		Utilities updateWorkDirectoryFromFileStream: fileStream ].
 	
@@ -176,10 +176,10 @@ informSucessfullAction: anActionName
 	(PopUpMenu 		labels:		'Ok') 	startUpWithCaption: anActionName,' was succesfull'.
 	^anActionName, ' was succesfull.'.! !
 
-!Utilities class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:52:27'!
-requestWorkDirectoryFileEntryfor: anEntity askUser: aBoolean
+!Utilities class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:17:00'!
+requestWorkDirectoryFileEntryfor: aPotentialFileName askUser: aBoolean
 	| fileEntry newFullFilePath |
-	fileEntry := self currentWorkDirectory // (anEntity asString asFileName , '.st').
+	fileEntry := self currentWorkDirectory // aPotentialFileName asString asFileName.
 	aBoolean ifTrue: [newFullFilePath _ self request: 'Enter a new file name' 
 									initialAnswer: fileEntry asString
 									orCancel: [^self error: 'Please close this to abort operation'].

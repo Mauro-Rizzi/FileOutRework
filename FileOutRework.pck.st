@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 1:41:39 pm'!
+'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 6:16:32 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 14!
+!provides: 'FileOutRework' 1 15!
 SystemOrganization addCategory: 'FileOutRework'!
 
 
@@ -15,13 +15,13 @@ FileOutReworkPackage class
 	instanceVariableNames: ''!
 
 
-!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:37'!
+!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MJR 12/2/2020 18:15:49'!
 postPackageInstall
 
 	Transcript show: 'Installation of FileOutrework completed'.
 	! !
 
-!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:20'!
+!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MJR 12/2/2020 18:15:56'!
 prePackageInstall
 
 	Transcript show: 'Installing FileOutrework'.
@@ -40,13 +40,13 @@ FileOutReworkPackage class
 	instanceVariableNames: ''!
 
 
-!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:37'!
+!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MJR 12/2/2020 18:15:49'!
 postPackageInstall
 
 	Transcript show: 'Installation of FileOutrework completed'.
 	! !
 
-!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:20'!
+!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MJR 12/2/2020 18:15:56'!
 prePackageInstall
 
 	Transcript show: 'Installing FileOutrework'.

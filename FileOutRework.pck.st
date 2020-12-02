@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 1:23:36 pm'!
+'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 1:41:39 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 13!
+!provides: 'FileOutRework' 1 14!
 SystemOrganization addCategory: 'FileOutRework'!
 
 
@@ -310,13 +310,14 @@ fileOutCategoryToNewDestination: category
 
 	^self fileOutCategory: category askUserForDestination: true.! !
 
-!CodePackage methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 13:12:42'!
+!CodePackage methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 13:41:26'!
 forceSaveToCurrentFullFileName
 	"Forcefully save the package to it's current FullFileName"
 	
 	fullFileName asFileEntry forceWriteStreamDo: [ :stream |
 		stream timeStamp.
-		self writeOnStream: stream ].
+		self writeOnStream: stream.
+		Utilities updateWorkDirectoryFromFileStream: stream].
 
 	self hasUnsavedChanges: false.
 	ChangeSet removeChangeSet: (ChangeSet existingOrNewChangeSetForPackage: self)! !

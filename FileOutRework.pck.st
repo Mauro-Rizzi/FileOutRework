@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 12:28:45 pm'!
+'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 12:44:55 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 10!
+!provides: 'FileOutRework' 1 11!
 SystemOrganization addCategory: 'FileOutRework'!
 
 
@@ -196,6 +196,12 @@ fileOutToNewDestinationAndRemove
 	self showChangeSet: ChangeSet changeSetForBaseSystem.
 	self update! !
 
+!CodePackageList methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:42:53'!
+saveToNewDestination
+
+	selection ifNotNil: [
+		selection saveToNewDestination ]! !
+
 !ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:18:35'!
 fileOutCategory: catName askUserForDestination: aBoolean
 	"FileOut the named category to an user defined destination"
@@ -298,17 +304,37 @@ fileOutCategoryToNewDestination: category
 
 	^self fileOutCategory: category askUserForDestination: true.! !
 
+!CodePackage methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:40:06'!
+saveToNewDestination
+	"If we can't save, find a new destination directory."
+	fullFileName ifNotNil: [
+		fullFileName asFileEntry parent exists ifFalse: [
+			fullFileName _ nil ]].
+
+	"If we were never saved, or never saved since image was moved, or target directory disappeared, then save to image directory."
+	fullFileName ifNil: [
+		fullFileName _
+			(Utilities requestWorkDirectoryFileEntryfor: self packageFileName askUser: true) pathName ].
+
+	fullFileName asFileEntry forceWriteStreamDo: [ :stream |
+		stream timeStamp.
+		self writeOnStream: stream ].
+
+	self hasUnsavedChanges: false.
+	ChangeSet removeChangeSet: (ChangeSet existingOrNewChangeSetForPackage: self)! !
+
 !Utilities class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 11:29:37'!
 currentWorkDirectory
 
 	CurrentWorkDirectory ifNil: [		CurrentWorkDirectory _ DirectoryEntry smalltalkImageDirectory ].
 	^CurrentWorkDirectory.! !
 
-!Utilities class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 11:42:39'!
+!Utilities class methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:35:15'!
 informSucessfullAction: anActionName
-	
-	(PopUpMenu 		labels:		'Ok') 	startUpWithCaption: anActionName,' was succesfull'.
-	^anActionName, ' was succesfull.'.! !
+	| message |
+	message := anActionName, ' was succesfull.'.
+	self inform: message.
+	^message.! !
 
 !Utilities class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:17:00'!
 requestWorkDirectoryFileEntryfor: aPotentialFileName askUser: aBoolean
@@ -324,6 +350,47 @@ requestWorkDirectoryFileEntryfor: aPotentialFileName askUser: aBoolean
 updateWorkDirectoryFromFileStream: aFileStream
 	"I'm not sure i like this implementation, but i'm also not sure if there's a better cross-platform way to update the directory with the parent of the current fileStream target"
 	CurrentWorkDirectory := DirectoryEntry withPathName: aFileStream fileEntry parent asString! !
+
+!CodePackageListWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:43:34'!
+buildButtonPane
+
+	| saveButton createButton deleteButton browseChangesButton browseButton addReqButton buttonRow |
+	saveButton := PluggableButtonMorph 
+							model: model 
+							action: #saveToNewDestination 
+							label: 'save'.
+	createButton := PluggableButtonMorph 
+							model: self 
+							action: #createPackage 
+							label: 'new'.
+	deleteButton := PluggableButtonMorph 
+							model: self 
+							action: #deletePackage 
+							label: 'delete/merge'.
+	browseChangesButton := PluggableButtonMorph 
+							model: self 
+							action: #browseChanges 
+							label: 'changes'.
+	browseButton := PluggableButtonMorph 
+							model: self 
+							action: #browse 
+							label: 'browse'.
+	addReqButton := PluggableButtonMorph 
+							model: self 
+							action: #addRequirement 
+							label: 'add requirement'.
+	buttonRow := LayoutMorph newRow.
+	buttonRow
+		doAdoptWidgetsColor;
+		color: self widgetsColor quiteWhiter;
+		addMorph: saveButton proportionalWidth: 0.6;
+		addMorph: createButton proportionalWidth: 0.6;
+		addMorph: deleteButton proportionalWidth: 0.6;
+		addMorph: browseChangesButton proportionalWidth: 0.6;
+		addMorph: browseButton proportionalWidth: 0.6;
+		addMorph: addReqButton proportionalWidth: 0.6.
+	buttonRow submorphsDo: [ :button | button  color: self widgetsColor ].
+	^ buttonRow ! !
 
 !BrowserWindow class methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:53:22'!
 classListMenuOptions

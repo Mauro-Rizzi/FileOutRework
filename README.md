@@ -1,6 +1,11 @@
 # FileOutRework
 
-This Smalltalk package seeks to improve the functionality of native fileOut implementations in order for the system to remember the last fileOut destination and to allow the user to choose a new destination quickly and easily. 
+This smalltalk package adds functionality to all menus to allow you to select a destination to fileOut to (and save in the case of packages) and have the system remember where you last worked in.
+
+The package modifies the system class browser, denotative object browser, code file browser, changeset browser, package browser and finally the filecodebrowser.
+For compatability reasons the only methods that are overwritten are the menu constructors, everything else was done by adding new methods to make sure the package can't instantly break images in future base image updates.
+
+This package is now considered feature complete.
 
 ## Install instructions
 

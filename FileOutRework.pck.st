@@ -1,8 +1,58 @@
-'From Cuis 5.0 [latest update: #4384] on 1 December 2020 at 8:20:54 pm'!
+'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 12:16:35 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 8!
+!provides: 'FileOutRework' 1 9!
+SystemOrganization addCategory: 'FileOutRework'!
 
 
+!classDefinition: #FileOutReworkPackage category: 'FileOutRework'!
+CodePackage subclass: #FileOutReworkPackage
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'FileOutRework'!
+!classDefinition: 'FileOutReworkPackage class' category: 'FileOutRework'!
+FileOutReworkPackage class
+	instanceVariableNames: ''!
+
+
+!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:37'!
+postPackageInstall
+
+	Transcript show: 'Installation of FileOutrework completed'.
+	! !
+
+!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:20'!
+prePackageInstall
+
+	Transcript show: 'Installing FileOutrework'.
+	Transcript show: 'Adding CurrentWorkDirectory class var to Utilities'.
+	Utilities addClassVarName: 'CurrentWorkDirectory'.
+	Transcript show: 'Succesfully addedclass var CurrentWorkDirectory to Utilities class'! !
+FileOutReworkPackage prePackageInstall!
+!classDefinition: #FileOutReworkPackage category: 'FileOutRework'!
+CodePackage subclass: #FileOutReworkPackage
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'FileOutRework'!
+!classDefinition: 'FileOutReworkPackage class' category: 'FileOutRework'!
+FileOutReworkPackage class
+	instanceVariableNames: ''!
+
+
+!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:37'!
+postPackageInstall
+
+	Transcript show: 'Installation of FileOutrework completed'.
+	! !
+
+!FileOutReworkPackage methodsFor: 'package installation' stamp: 'MJR 12/2/2020 12:13:20'!
+prePackageInstall
+
+	Transcript show: 'Installing FileOutrework'.
+	Transcript show: 'Adding CurrentWorkDirectory class var to Utilities'.
+	Utilities addClassVarName: 'CurrentWorkDirectory'.
+	Transcript show: 'Succesfully addedclass var CurrentWorkDirectory to Utilities class'! !
 
 !CodeProvider methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:47:56'!
 fileOutMessageToCurrentWorkDirectory
@@ -61,6 +111,73 @@ fileOutSystemCategoryToNewDestination
 
 	selectedSystemCategory
 		ifNotNil: [ systemOrganizer fileOutCategoryToNewDestination: selectedSystemCategory ]! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:42:02'!
+fileOutClassToCurrentWorkDirectory
+
+	self selectedClass fileOutToCurrentWorkDirectory! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:08:40'!
+fileOutClassToNewDestination
+
+	self selectedClass fileOutToNewDestination! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:42:17'!
+fileOutMessageCategoriesToCurrentWorkDirectory
+
+	self selectedClassOrMetaClass fileOutCategoryToCurrentWorkDirectory: self selectedMessageCategoryName! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:09:23'!
+fileOutMessageCategoriesToNewDestination
+
+	self selectedClassOrMetaClass fileOutCategoryToNewDestination: self selectedMessageCategoryName! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:42:34'!
+fileOutMessageToCurrentWorkDirectory
+
+	self selectedMessageName ifNil: [^self].
+	self selectedClassOrMetaClass fileOutMethodToCurrentWorkDirectory: self selectedMessageName! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:09:03'!
+fileOutMessageToNewDestination
+
+	self selectedMessageName ifNil: [^self].
+	self selectedClassOrMetaClass fileOutMethodToNewDestination: self selectedMessageName! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:42:47'!
+fileOutToCurrentWorkDirectory
+
+	caseCodeSource fileOutToCurrentWorkDirectory! !
+
+!CodeFileBrowser methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:08:19'!
+fileOutToNewDestination
+
+	caseCodeSource fileOutToNewDestination! !
+
+!ChangeList methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:59:09'!
+fileOutCurrentVersionsOfSelectionsToNewDestination
+	(Utilities requestWorkDirectoryFileEntryfor: 'Filename.st' askUser: true) writeStreamDo: [ :stream |
+			stream timeStamp.
+			self currentVersionsOfSelections do: [ :methodRef |
+				methodRef actualClass
+					printMethodChunk: methodRef methodSymbol
+					withPreamble: true
+					on: stream
+					moveSource: false
+					toFile: 0 ].
+			Utilities updateWorkDirectoryFromFileStream: stream].
+		
+	^Utilities informSucessfullAction: 'FileOut'! !
+
+!ChangeList methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:59:22'!
+fileOutSelectionsToNewDestination
+	(Utilities requestWorkDirectoryFileEntryfor: 'Filename.st' askUser: true)  writeStreamDo: [ :stream |
+			stream timeStamp.
+			listSelections with: changeList do: [ :selected :item |
+				selected ifTrue: [ item fileOutOn: stream ]].
+			Utilities updateWorkDirectoryFromFileStream: stream].
+	
+	^Utilities informSucessfullAction: 'FileOut'! !
 
 !ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:18:35'!
 fileOutCategory: catName askUserForDestination: aBoolean
@@ -821,6 +938,123 @@ systemCategoryMenuOptions
 		}`.
 	! !
 
+!CodeFileBrowserWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:44:09'!
+classListMenu
+	| aMenu itemColl |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addTitle: 'Class List'.
+	itemColl _ OrderedCollection new.
+	itemColl addAll:
+		{
+			{#label -> 'definition'. #object -> #model. #selector -> #editClass. #icon -> #editFindReplaceIcon} asDictionary. 
+			{#label -> 'comment'. #object -> #model. #selector -> #editComment. #icon -> #editFindReplaceIcon} asDictionary. 
+			nil
+		}.
+	self model baseCodeSource isLiveSmalltalkImage ifTrue: [
+		itemColl addAll:
+			{
+				{#label -> 'browse full (b)'. #selector -> #browseMethodFull. #icon -> #editFindReplaceIcon} asDictionary. 
+				{#label -> 'class refs (N)'. #selector -> #browseClassRefs. #icon -> #classIcon} asDictionary. 
+				nil. 
+				{#label -> 'fileIn'. #object -> #model. #selector -> #fileInClass. #icon -> #updateIcon} asDictionary
+			} ].
+	itemColl addAll:
+		{
+			{#label -> 'fileOut'. #object -> #model. #selector -> #fileOutClassToCurrentWorkDirectory. #icon -> #fileOutIcon} asDictionary. 
+			{#label -> 'fileOutTo'. #object -> #model. #selector -> #fileOutClassToNewDestination. #icon -> #fileOutIcon} asDictionary. 
+			nil. 
+			{#label -> 'rename...'. #object -> #model. #selector -> #renameClass. #icon -> #saveAsIcon} asDictionary. 
+			{#label -> 'remove'. #object -> #model. #selector -> #removeClass. #icon -> #listRemoveIcon} asDictionary. 
+			nil. 
+			{#label -> 'remove existing'. #object -> #model. #selector -> #removeUnmodifiedCategories. #icon -> #deleteIcon} asDictionary
+		}.
+	aMenu addItemsFromDictionaries: itemColl.
+	^ aMenu.! !
+
+!CodeFileBrowserWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:55:31'!
+codeFileListMenu
+	| aMenu itemColl |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addTitle: 'Code File'.
+	itemColl _ OrderedCollection new.
+	itemColl addAll:
+		{
+			{#label -> 'find class... (f)'. #selector -> #findClass} asDictionary. 
+			nil
+		}.
+	self model baseCodeSource isLiveSmalltalkImage ifTrue: [
+		itemColl add:
+			{#label -> 'fileIn'. #object -> #model. #selector -> #fileIn} asDictionary ].
+	itemColl add:
+		{#label -> 'fileOut'. #object -> #model. #selector -> #fileOutToNewDestination} asDictionary.
+	self model caseCodeSource isLiveSmalltalkImage ifFalse: [
+		itemColl add:
+			{#label -> 'remove existing'. #object -> #model. #selector -> #removeUnmodifiedClasses} asDictionary ].
+	aMenu addItemsFromDictionaries: itemColl.
+	^ aMenu.! !
+
+!CodeFileBrowserWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:47:36'!
+messageCategoryMenu
+	| aMenu itemColl |
+	aMenu _ MenuMorph new defaultTarget: model.
+	"All the options are for the model."
+	aMenu addTitle: 'Message Category'.
+	itemColl _ OrderedCollection new.
+	self model baseCodeSource isLiveSmalltalkImage ifTrue: [
+		itemColl add:
+			{#label -> 'fileIn'. #selector -> #fileInMessageCategories. #icon -> #updateIcon} asDictionary ].
+	itemColl addAll:
+		{
+			{#label -> 'fileOut'. #selector -> #fileOutMessageCategoriesToCurrentWorkDirectory. #icon -> #fileOutIcon} asDictionary. 
+			{#label -> 'fileOutTo'. #selector -> #fileOutMessageCategoriesToNewDestination. #icon -> #fileOutIcon} asDictionary. 
+			nil. 
+			{#label -> 'reorganize'. #selector -> #editMessageCategories. #icon -> #sendReceiveIcon} asDictionary. 
+			nil. 
+			{#label -> 'add item...'. #selector -> #addCategory. #icon -> #newIcon} asDictionary. 
+			nil. 
+			{#label -> 'rename...'. #selector -> #renameCategory. #icon -> #saveAsIcon} asDictionary. 
+			{#label -> 'remove'. #selector -> #removeMessageCategory. #icon -> #listRemoveIcon} asDictionary
+		}.
+	self model caseCodeSource isLiveSmalltalkImage ifFalse: [
+		itemColl addAll:
+			{
+				nil. 
+				{#label -> 'remove existing'. #selector -> #removeUnmodifiedMethods. #icon -> #deleteIcon} asDictionary
+			} ].
+	aMenu addItemsFromDictionaries: itemColl.
+	^ aMenu.! !
+
+!CodeFileBrowserWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:47:58'!
+messageListMenu
+	| aMenu itemColl |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addTitle: 'Message List'.
+	itemColl _ OrderedCollection new.
+	self model baseCodeSource isLiveSmalltalkImage ifTrue: [
+		itemColl add:
+			{#label -> 'fileIn'. #object -> #model. #selector -> #fileInMessage. #icon -> #updateIcon} asDictionary ].
+	itemColl addAll:
+		{
+			{#label -> 'fileOut'. #object -> #model. #selector -> #fileOutMessageToCurrentWorkDirectory. #icon -> #fileOutIcon} asDictionary. 
+			{#label -> 'fileOutTo'. #object -> #model. #selector -> #fileOutMessageToNewDestination. #icon -> #fileOutIcon} asDictionary. 
+			nil
+		}.
+	self model baseCodeSource isLiveSmalltalkImage ifTrue: [
+		itemColl addAll:
+			{
+				{#label -> 'senders (n)'. #selector -> #browseSenders. #icon -> #mailForwardIcon} asDictionary. 
+				{#label -> 'implementors (m)'. #selector -> #browseImplementors. #icon -> #developmentIcon} asDictionary. 
+				{#label -> 'method inheritance (h)'. #selector -> #methodHierarchy. #icon -> #goDownIcon} asDictionary. 
+				{#label -> 'versions (v)'. #selector -> #browseVersions. #icon -> #clockIcon} asDictionary
+			} ].
+	itemColl addAll:
+		{
+			nil. 
+			{#label -> 'remove method (x)'. #object -> #model. #selector -> #removeMessage. #icon -> #deleteIcon} asDictionary
+		}.
+	aMenu addItemsFromDictionaries: itemColl.
+	^ aMenu.! !
+
 !DenotativeObjectBrowserWindow methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:50:48'!
 messageListMenu
 	"Answer the message-list menu"
@@ -971,3 +1205,243 @@ systemCategoryMenu
 			} asDictionary.
 		}`.
 	^aMenu! !
+
+!ChangeListWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:19:36'!
+listMenu
+	"Fill aMenu up so that it comprises the primary changelist-browser menu"
+
+	| aMenu |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addTitle: 'Change List'.
+	aMenu addStayUpIcons.
+	aMenu
+		addItemsFromDictionaries: `{
+			{
+				#label 			-> 		'fileIn selections'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileInSelections.
+				#balloonText 	-> 		'import the selected items into the image'.
+			} asDictionary.
+			{
+				#label 			-> 		'fileOut selections...	'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutSelectionsToNewDestination.
+				#balloonText 	-> 		'create a new file containing the selected items'.
+			} asDictionary.
+			{
+				#label 			-> 		'fileOut current version of selections...'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutCurrentVersionsOfSelectionsToNewDestination.
+				#balloonText 	-> 		'create a new file containing the current (in-image) counterparts of the selected methods'.
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'compare to current'.
+				#object 			-> 		#model.
+				#selector 		-> 		#compareToCurrentVersion.
+				#balloonText 	-> 		'open a separate window which shows the text differences between the on-file version and the in-image version.'.
+			} asDictionary.
+			{
+				#label 			-> 		'toggle diffing (D)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#toggleDiffing.
+				#balloonText 	-> 		'start or stop showing diffs in the code pane.'.
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'select new methods'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectNewMethods.
+				#balloonText 	-> 		'select methods in the file that do not currently exist in the image'.
+			} asDictionary.
+			{
+				#label 			-> 		'select changes for absent classes'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectAllForAbsentClasses.
+				#balloonText 	-> 		'select methods in the file for classes that are not defined in the image'.
+			} asDictionary.
+			{
+				#label 			-> 		'select all changes for this class'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectAllForThisClass.
+				#balloonText 	-> 		'select all methods in the file that belong to the currently-selected class'.
+			} asDictionary.
+			{
+				#label 			-> 		'select unchanged methods'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectUnchangedMethods.
+				#balloonText 	-> 		'select methods in the file whose in-image versions are the same as their in-file counterparts'.
+			} asDictionary.
+			{
+				#label 			-> 		'select methods equivalent to current'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectEquivalentMethods.
+				#balloonText 	-> 		'select methods in the file whose in-image versions have the same behavior as their in-file counterparts'.
+			} asDictionary.
+			{
+				#label 			-> 		'select methods older than current'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectMethodsOlderThanCurrent.
+				#balloonText 	-> 		'select methods in the file that are older than the one currently in the image'.
+			} asDictionary.
+			{
+				#label 			-> 		'select removals of sent methods'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectRemovalsOfSent.
+				#balloonText 	-> 		'select all method removals of methods that have some sender in the image'.
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'select all (a)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#selectAll.
+				#balloonText 	-> 		'select all the items in the list'.
+			} asDictionary.
+			{
+				#label 			-> 		'deselect all'.
+				#object 			-> 		#model.
+				#selector 		-> 		#deselectAll.
+				#balloonText 	-> 		'deselect all the items in the list'.
+			} asDictionary.
+			{
+				#label 			-> 		'invert selections'.
+				#object 			-> 		#model.
+				#selector 		-> 		#invertSelections.
+				#balloonText 	-> 		'select every item that is not currently selected, and deselect every item that *is* currently selected'.
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'browse class and method'.
+				#selector 		-> 		#browseMethodFull.
+				#balloonText 	-> 		'open a full browser showing the selected method'.
+			} asDictionary.
+			{
+				#label 			-> 		'browse all versions of single selection'.
+				#selector 		-> 		#browseVersions.
+				#balloonText 	-> 		'open a version browser showing the versions of the currently selected method'.
+			} asDictionary.
+			{
+				#label 			-> 		'browse current versions of selections'.
+				#selector 		-> 		#browseCurrentVersionsOfSelections.
+				#balloonText 	-> 		'open a message-list browser showing the current (in-image) counterparts of the selected methods'.
+			} asDictionary.
+			{
+				#label 			-> 		'destroy current methods of selections'.
+				#object 			-> 		#model.
+				#selector 		-> 		#destroyCurrentCodeOfSelections.
+				#balloonText 	-> 		'remove (*destroy*) the in-image counterparts of all selected methods'.
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'remove doIts'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeDoIts.
+				#balloonText 	-> 		'remove all items that are doIts rather than definitions'.
+			} asDictionary.
+			{
+				#label 			-> 		'remove older versions'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeOlderMethodVersions.
+				#balloonText 	-> 		'remove all but the most recent versions of methods in the list'.
+			} asDictionary.
+			{
+				#label 			-> 		'remove up-to-date versions'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeUpToDate.
+				#balloonText 	-> 		'remove all items whose code is the same as the counterpart in-image code'.
+			} asDictionary.
+			{
+				#label 			-> 		'remove empty class comments'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeEmptyClassComments.
+				#balloonText 	-> 		'remove all empty class comments'.
+			} asDictionary.
+			{
+				#label 			-> 		'remove selected items'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeSelections.
+				#balloonText 	-> 		'remove the selected items from the change-list'.
+			} asDictionary.
+			{
+				#label 			-> 		'remove unselected items'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeNonSelections.
+				#balloonText 	-> 		'remove all the items not currently selected from the change-list'.
+			} asDictionary.
+		}`.
+	^ aMenu! !
+
+!CodeFile methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:59:39'!
+fileOutToNewDestination
+	(Utilities requestWorkDirectoryFileEntryfor: 'Filename.st' askUser: true) writeStreamDo: [ :stream | 
+			sourceSystem isEmpty
+				ifFalse: [ stream nextChunkPut: sourceSystem printString; newLine ].
+			self fileOutOn: stream.
+			stream newLine; newLine.
+			classes do: [ :cls |
+				cls needsInitialize
+					ifTrue: [ stream newLine; nextChunkPut: cls name,' initialize']].
+			stream newLine.
+			Utilities updateWorkDirectoryFromFileStream: stream ].
+		
+	^Utilities informSucessfullAction: 'FileOut'! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:03:46'!
+fileOutAndAskUserForDestination: aBoolean
+
+	(Utilities requestWorkDirectoryFileEntryfor: (self name, '.st') askUser: aBoolean) writeStreamDo: [ :stream |
+		self fileOutOn: stream.
+		self needsInitialize ifTrue: [
+			stream newLine; nextChunkPut: self name,' initialize' ].
+		Utilities updateWorkDirectoryFromFileStream: stream].
+	
+	^Utilities informSucessfullAction: 'FileOut'! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:00:34'!
+fileOutCategory: categoryName askUser: aBoolean
+
+	(Utilities requestWorkDirectoryFileEntryfor: (self name,'-',categoryName,'.st') askUser: aBoolean) writeStreamDo: [ :f |
+		self fileOutMethods: (self organization listAtCategoryNamed: categoryName) on: f.
+		Utilities updateWorkDirectoryFromFileStream: f].
+	
+	^Utilities informSucessfullAction: 'FileOut'! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:01:09'!
+fileOutCategoryToCurrentWorkDirectory: categoryName
+
+	^self fileOutCategory: categoryName askUser: false! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:01:24'!
+fileOutCategoryToNewDestination: categoryName
+
+	^self fileOutCategory: categoryName askUser: true! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:01:47'!
+fileOutMethod: selector askUser: aBoolean
+
+	(Utilities requestWorkDirectoryFileEntryfor: (name,'-', selector asFileName, '.st')  askUser: aBoolean) writeStreamDo: [ :f |
+		self fileOutMethods: (Array with: selector) on: f.
+		Utilities updateWorkDirectoryFromFileStream: f].
+	
+	^Utilities informSucessfullAction: 'FileOut'! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:02:09'!
+fileOutMethodToCurrentWorkDirectory: selector
+
+	^self fileOutMethod: selector askUser: false! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:02:34'!
+fileOutMethodToNewDestination: selector
+
+	^self fileOutMethod: selector askUser: true! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:04:00'!
+fileOutToCurrentWorkDirectory
+
+	^self fileOutAndAskUserForDestination: false! !
+
+!PseudoClass methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:04:13'!
+fileOutToNewDestination
+	
+	^self fileOutAndAskUserForDestination: true! !
+FileOutReworkPackage postPackageInstall!

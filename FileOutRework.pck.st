@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 12:44:55 pm'!
+'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 1:23:36 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 11!
+!provides: 'FileOutRework' 1 13!
 SystemOrganization addCategory: 'FileOutRework'!
 
 
@@ -196,6 +196,12 @@ fileOutToNewDestinationAndRemove
 	self showChangeSet: ChangeSet changeSetForBaseSystem.
 	self update! !
 
+!CodePackageList methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 13:23:09'!
+saveToCurrentDestination
+
+	selection ifNotNil: [
+		selection saveToCurrentDestination ]! !
+
 !CodePackageList methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:42:53'!
 saveToNewDestination
 
@@ -304,24 +310,37 @@ fileOutCategoryToNewDestination: category
 
 	^self fileOutCategory: category askUserForDestination: true.! !
 
-!CodePackage methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:40:06'!
-saveToNewDestination
-	"If we can't save, find a new destination directory."
-	fullFileName ifNotNil: [
-		fullFileName asFileEntry parent exists ifFalse: [
-			fullFileName _ nil ]].
-
-	"If we were never saved, or never saved since image was moved, or target directory disappeared, then save to image directory."
-	fullFileName ifNil: [
-		fullFileName _
-			(Utilities requestWorkDirectoryFileEntryfor: self packageFileName askUser: true) pathName ].
-
+!CodePackage methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 13:12:42'!
+forceSaveToCurrentFullFileName
+	"Forcefully save the package to it's current FullFileName"
+	
 	fullFileName asFileEntry forceWriteStreamDo: [ :stream |
 		stream timeStamp.
 		self writeOnStream: stream ].
 
 	self hasUnsavedChanges: false.
 	ChangeSet removeChangeSet: (ChangeSet existingOrNewChangeSetForPackage: self)! !
+
+!CodePackage methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 13:13:10'!
+saveToCurrentDestination
+	"If we can't save, find a new destination directory."
+	fullFileName ifNotNil: [
+		fullFileName asFileEntry parent exists ifFalse: [
+			fullFileName _ nil ]].
+
+	"If we were never saved, or never saved since image was moved, or target directory disappeared, then save to an user defined directory."
+	fullFileName ifNil: [
+		fullFileName _
+			(Utilities requestWorkDirectoryFileEntryfor: self packageFileName askUser: true) pathName ].
+
+	self forceSaveToCurrentFullFileName ! !
+
+!CodePackage methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 13:13:19'!
+saveToNewDestination
+	"Save the package to a new user defined destination directory"
+	fullFileName _		(Utilities requestWorkDirectoryFileEntryfor: self packageFileName askUser: true) pathName.
+
+	self forceSaveToCurrentFullFileName ! !
 
 !Utilities class methodsFor: '*FileOutRework' stamp: 'MR 11/18/2020 11:29:37'!
 currentWorkDirectory
@@ -351,14 +370,18 @@ updateWorkDirectoryFromFileStream: aFileStream
 	"I'm not sure i like this implementation, but i'm also not sure if there's a better cross-platform way to update the directory with the parent of the current fileStream target"
 	CurrentWorkDirectory := DirectoryEntry withPathName: aFileStream fileEntry parent asString! !
 
-!CodePackageListWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:43:34'!
+!CodePackageListWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 13:21:37'!
 buildButtonPane
 
-	| saveButton createButton deleteButton browseChangesButton browseButton addReqButton buttonRow |
+	| saveButton saveToButton createButton deleteButton browseChangesButton browseButton addReqButton buttonRow |
 	saveButton := PluggableButtonMorph 
 							model: model 
-							action: #saveToNewDestination 
+							action: #saveToCurrentDestination 
 							label: 'save'.
+	saveToButton := PluggableButtonMorph 
+							model: model 
+							action: #saveToNewDestination
+							label: 'saveTo'.
 	createButton := PluggableButtonMorph 
 							model: self 
 							action: #createPackage 
@@ -383,11 +406,12 @@ buildButtonPane
 	buttonRow
 		doAdoptWidgetsColor;
 		color: self widgetsColor quiteWhiter;
-		addMorph: saveButton proportionalWidth: 0.6;
-		addMorph: createButton proportionalWidth: 0.6;
-		addMorph: deleteButton proportionalWidth: 0.6;
-		addMorph: browseChangesButton proportionalWidth: 0.6;
-		addMorph: browseButton proportionalWidth: 0.6;
+		addMorph: saveButton proportionalWidth: 0.3;
+		addMorph: saveToButton proportionalWidth: 0.4;
+		addMorph: createButton proportionalWidth: 0.3;
+		addMorph: deleteButton proportionalWidth: 0.5;
+		addMorph: browseChangesButton proportionalWidth: 0.4;
+		addMorph: browseButton proportionalWidth: 0.4;
 		addMorph: addReqButton proportionalWidth: 0.6.
 	buttonRow submorphsDo: [ :button | button  color: self widgetsColor ].
 	^ buttonRow ! !

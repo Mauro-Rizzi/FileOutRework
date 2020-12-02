@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 12:16:35 pm'!
+'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 12:28:45 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 9!
+!provides: 'FileOutRework' 1 10!
 SystemOrganization addCategory: 'FileOutRework'!
 
 
@@ -178,6 +178,23 @@ fileOutSelectionsToNewDestination
 			Utilities updateWorkDirectoryFromFileStream: stream].
 	
 	^Utilities informSucessfullAction: 'FileOut'! !
+
+!ChangeSorter methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:21:17'!
+fileOutToNewDestinationAndKeep
+	"File out the current change set."
+
+	myChangeSet fileOutToNewDestination.
+	self update! !
+
+!ChangeSorter methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:20:48'!
+fileOutToNewDestinationAndRemove
+	"File out the current change set."
+
+	myChangeSet fileOutToNewDestination.
+	self removePrompting: false.
+
+	self showChangeSet: ChangeSet changeSetForBaseSystem.
+	self update! !
 
 !ClassDescription methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 20:18:35'!
 fileOutCategory: catName askUserForDestination: aBoolean
@@ -1370,6 +1387,183 @@ listMenu
 			} asDictionary.
 		}`.
 	^ aMenu! !
+
+!ChangeSorterWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:21:57'!
+changeSetListKey: aChar from: view
+	"Respond to a Command key.  I am a model with a listView that has a list of changeSets."
+
+	aChar == $D ifTrue: [^ model toggleDiffing]. 
+	aChar == $o ifTrue: [^ model fileOutToNewDestinationAndRemove].
+	aChar == $k ifTrue: [^ model fileOutToNewDestinationAndKeep].
+	aChar == $r ifTrue: [^ model rename].
+	aChar == $x ifTrue: [^ model remove].
+
+	^ self messageListKey: aChar from: view! !
+
+!ChangeSorterWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:22:37'!
+changeSetMenu
+	"Set up aMenu to hold commands for the change-set-list pane.  This could be for a single or double changeSorter"
+
+	| aMenu isForBaseSystem |
+	isForBaseSystem _ model changeSet isForBaseSystem.
+	aMenu _ MenuMorph new defaultTarget: model.
+	aMenu addTitle: 'Change Set'.
+	aMenu addStayUpIcons.
+
+	aMenu add: 'File out and remove (o)' 			action: #fileOutToNewDestinationAndRemove 	icon: #fileOutIcon 	enabled: isForBaseSystem.
+	aMenu add: 'File out and keep (k)' 				action: #fileOutToNewDestinationAndKeep 		icon: #fileOutIcon.
+	aMenu addLine.
+
+	aMenu add: 'Rename change set (r)' 			action: #rename 					icon: #saveAsIcon 	enabled: isForBaseSystem.
+	aMenu add: 'Destroy change set (x)' 			action: #remove 					icon: #warningIcon 	enabled: isForBaseSystem.
+	aMenu addLine.
+	model currentCanHavePreambleAndPostscript ifTrue: [
+		aMenu addLine.
+		model currentHasPreamble
+			ifTrue: [
+				aMenu add: 'Edit preamble (p)' 		action: #addPreamble 			icon: #textEditorIcon.
+				aMenu add: 'Remove preamble' 	action: #removePreamble 		icon: #listRemoveIcon ]
+			ifFalse: [
+				aMenu add: 'Add preamble (p)' 	action: #addPreamble 			icon: #listAddIcon ].
+		model currentHasPostscript
+			ifTrue: [
+				aMenu add: 'Edit postscript...' 		action: #editPostscript 			icon: #textEditorIcon .
+				aMenu add: 'Remove postscript' 	action: #removePostscript 		icon: #listRemoveIcon ]
+			ifFalse: [
+				aMenu add: 'Add postscript...' 		action: #editPostscript 			icon: #listAddIcon ].
+	].
+	aMenu addLine.
+
+	"CONFLICTS SECTION"
+	(aMenu add: 'conflicts with other change sets' 	target: self 	action: #browseMethodConflicts 	icon: #emblemImportantIcon)
+		setBalloonText: 'Browse all methods that occur both in this change set and in at least one other change set.'.
+	aMenu addLine.
+
+	"CHECKS SECTION"
+	(aMenu add: 'trim history' 						action: #trimHistory 				icon: #clockIcon 		enabled: isForBaseSystem)
+		setBalloonText: ' Drops any methods added and then removed, as well as renaming and reorganization of newly-added classes. ',
+				'NOTE: can cause confusion if later filed in over an earlier version of these changes'.
+
+	(aMenu add: 'view affected class categories' action: #viewAffectedClassCategories icon: #packageIcon)
+		setBalloonText: ' Show class categories affected by any contained change'.
+
+	^ aMenu! !
+
+!ChangeSorterWindow methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:23:49'!
+messageMenu
+	"Fill aMenu with items appropriate for the message list; could be for a single or double changeSorter"
+
+	| aMenu |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addTitle: 'message list'.
+	aMenu addStayUpIcons.
+	aMenu 
+		addItemsFromDictionaries: `{
+			{
+				#label 			-> 		'delete method from changeSet (d)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#forget.
+				#icon 			-> 		#warningIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'remove method from system (x)'.
+				#object 			-> 		#model.
+				#selector 		-> 		#removeMessage.
+				#icon 			-> 		#deleteIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'browse full (b)'.
+				#selector 		-> 		#browseMethodFull.
+				#icon 			-> 		#editFindReplaceIcon
+			} asDictionary.
+			{
+				#label 			-> 		'browse hierarchy (h)'.
+				#selector 		-> 		#browseHierarchy.
+				#icon 			-> 		#goTopIcon
+			} asDictionary.
+			{
+				#label 			-> 		'browse method (O)'.
+				#selector 		-> 		#openSingleMessageBrowser.
+				#icon 			-> 		#scriptIcon
+			} asDictionary.
+			{
+				#label 			-> 		'browse protocol (p)'.
+				#selector 		-> 		#browseFullProtocol.
+				#icon 			-> 		#spreadsheetIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'fileOut'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessageToCurrentWorkDirectory.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			{
+				#label 			-> 		'fileOutTo'.
+				#object 			-> 		#model.
+				#selector 		-> 		#fileOutMessageToNewDestination.
+				#icon 			-> 		#fileOutIcon
+			} asDictionary.
+			nil.
+			{
+				#label 			-> 		'senders of... (n)'.
+				#selector 		-> 		#browseSendersOfMessages.
+				#icon 			-> 		#mailForwardIcon
+			} asDictionary.
+			{
+				#label 			-> 		'implementors of... (m)'.
+				#selector 		-> 		#browseMessages.
+				#icon 			-> 		#developmentIcon
+			} asDictionary.
+			{
+				#label 			-> 		'inheritance (i)'.
+				#selector 		-> 		#methodHierarchy.
+				#icon 			-> 		#goDownIcon
+			} asDictionary.
+			{
+				#label 			-> 		'versions (v)'.
+				#selector 		-> 		#browseVersions.
+				#icon 			-> 		#clockIcon
+			} asDictionary.
+		}`.
+	^ aMenu! !
+
+!ChangeSet methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 12:26:07'!
+fileOutToNewDestination
+	"File out the receiver, to a file whose name is a function of the  
+	change-set name and either of the date & time or chosen to have a  
+	unique numeric tag, depending on the preference  
+	'changeSetVersionNumbers'"
+	| slips nameToUse |
+	nameToUse _ self name.
+	nameToUse _ nameToUse copyReplaceAll: 'AuthorName' with: Utilities authorName asUnaccented asCamelCase.
+	nameToUse _ Preferences changeSetVersionNumbers
+				ifTrue: [
+					DirectoryEntry currentDirectory
+						nextNameFor: nameToUse coda: '-', Utilities authorInitials
+						extension: 'cs.st' ]
+				ifFalse: [ (nameToUse , '.' , Utilities dateTimeSuffix , '.cs.st') asFileName ].
+		
+	(Utilities requestWorkDirectoryFileEntryfor: nameToUse askUser: true) writeStreamDo: [ :stream |
+		stream timeStamp.
+		self fileOutPreambleOn: stream.
+		self fileOutOn: stream.
+		self fileOutPostscriptOn: stream.
+		Utilities updateWorkDirectoryFromFileStream: stream].
+	
+	self hasUnsavedChanges: false.
+	Preferences checkForSlips
+		ifFalse: [^ self].
+	slips _ self checkForSlips.
+	(slips size > 0
+			and: [(PopUpMenu withCaption: 'Methods in this fileOut have halts
+or references to the Transcript
+or other ''slips'' in them.
+Would you like to browse them?' chooseFrom: 'Ignore\Browse slips')
+					= 2])
+		ifTrue: [ Smalltalk browseMessageList: slips name: 'Possible slips in ' , name ]! !
 
 !CodeFile methodsFor: '*FileOutRework' stamp: 'MJR 12/2/2020 11:59:39'!
 fileOutToNewDestination

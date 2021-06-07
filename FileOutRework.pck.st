@@ -1,6 +1,6 @@
-'From Cuis 5.0 [latest update: #4384] on 2 December 2020 at 6:16:32 pm'!
+'From Cuis 5.0 [latest update: #4386] on 7 June 2021 at 3:59:17 pm'!
 'Description This package seeks to improve the FileOut behaviour of the system so it remembers where you last exported to and lets you quickly select a new destination.'!
-!provides: 'FileOutRework' 1 15!
+!provides: 'FileOutRework' 1 16!
 SystemOrganization addCategory: 'FileOutRework'!
 
 
@@ -21,12 +21,16 @@ postPackageInstall
 	Transcript show: 'Installation of FileOutrework completed'.
 	! !
 
-!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MJR 12/2/2020 18:15:56'!
+!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MR 6/7/2021 15:53:44'!
 prePackageInstall
 
 	Transcript show: 'Installing FileOutrework'.
 	Transcript show: 'Adding CurrentWorkDirectory class var to Utilities'.
-	Utilities addClassVarName: 'CurrentWorkDirectory'.
+	[Utilities addClassVarName: 'CurrentWorkDirectory'.] 
+		on: Error
+		do: [:anError | 
+			anError errorMessage = 'CurrentWorkDirectory is already used as a variable name in class Utilities' 				ifTrue: [Transcript show: 'CurrentWorkDirectory already existed in Utilities class'] 
+			ifFalse: [^self error: anError errorMessage]].
 	Transcript show: 'Succesfully addedclass var CurrentWorkDirectory to Utilities class'! !
 FileOutReworkPackage prePackageInstall!
 !classDefinition: #FileOutReworkPackage category: 'FileOutRework'!
@@ -46,12 +50,16 @@ postPackageInstall
 	Transcript show: 'Installation of FileOutrework completed'.
 	! !
 
-!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MJR 12/2/2020 18:15:56'!
+!FileOutReworkPackage class methodsFor: 'installing' stamp: 'MR 6/7/2021 15:53:44'!
 prePackageInstall
 
 	Transcript show: 'Installing FileOutrework'.
 	Transcript show: 'Adding CurrentWorkDirectory class var to Utilities'.
-	Utilities addClassVarName: 'CurrentWorkDirectory'.
+	[Utilities addClassVarName: 'CurrentWorkDirectory'.] 
+		on: Error
+		do: [:anError | 
+			anError errorMessage = 'CurrentWorkDirectory is already used as a variable name in class Utilities' 				ifTrue: [Transcript show: 'CurrentWorkDirectory already existed in Utilities class'] 
+			ifFalse: [^self error: anError errorMessage]].
 	Transcript show: 'Succesfully addedclass var CurrentWorkDirectory to Utilities class'! !
 
 !CodeProvider methodsFor: '*FileOutRework' stamp: 'MR 12/1/2020 19:47:56'!
